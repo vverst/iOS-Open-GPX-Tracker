@@ -62,10 +62,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 print("AppDelegate:: WCSession is not supported")
             }
         }
+        
+        if #available(iOS 10.0, *) {
+            let notificationCenter = NotificationCenter.default
+            
+            notificationCenter.addObserver(self, selector: #selector(fileReceived(_:)),
+                                           name: .didReceiveFileFromURL, object: nil)
+            notificationCenter.addObserver(self, selector: #selector(fileReceived(_:)), name: .didReceiveFileFromAppleWatch, object: nil)
+        } else {
+            // Fallback on earlier versions
+             print("AppDelegate:: Notifications are not supported")
+        }
         // Restart any tasks that were paused (or not yet started) while the application was inactive. 
         // If the application was previously in the background, optionally refresh the user interface.
     }
-
+    
+    @objc @available(iOS 10.0, *)
+    func fileReceived(_ notification: Notification) {
+          Notifications.center.showFileNotification(notification)
+    }
+    
+    /// Presents alert when file received from Apple Watch
+    @objc func presentReceivedFile(_ notification: Notification) {
+        
+        guard let fileName = notification.userInfo?["fileName"] as? String? else { return }
+        
+        // alert to display to notify user that file has been received.
+        let controller = UIAlertController(title: "File Received from Apple Watch", message: "Received file: \"\(fileName ?? "")\"", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Done", style: .default) {
+            (action) in
+            print("ViewController:: Presented file received message from WatchConnectivity Session")
+        }
+        
+        controller.addAction(action)
+        window?.rootViewController?.present(controller, animated: true, completion: nil)
+    }
+    
+    
     /// Default placeholder function
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
