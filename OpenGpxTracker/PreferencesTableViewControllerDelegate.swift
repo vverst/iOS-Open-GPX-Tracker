@@ -22,4 +22,6 @@ protocol PreferencesTableViewControllerDelegate: class {
     /// User update the usage of imperial units
     func didUpdateUseImperial(_ newUseImperial: Bool)
     
+    /// User updated the desired accuracy
+    func didUpdateDesiredAccuracy(_ newDesiredAccuracy: Double)
 }

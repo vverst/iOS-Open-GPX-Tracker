@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import CoreLocation
 
 import Cache
 
@@ -19,6 +20,9 @@ let kCacheSection = 1
 /// Map Source Section Id in PreferencesTableViewController
 let kMapSourceSection = 2
 
+/// Desired Accuracy Section Id in PreferencesTableViewController
+let kDesiredAccuracySection = 3
+
 /// Cell Id of the Use Imperial units in UnitsSection
 let kUseImperialUnitsCell = 0
 
@@ -27,6 +31,21 @@ let kUseOfflineCacheCell = 0
 
 /// Cell Id for Clear cache in CacheSection of PreferencesTableViewController
 let kClearCacheCell = 1
+
+/// Cell Id of the Best For Navigation in DesiredAccuracySection
+let kDesiredAccuracyBestForNavigationCell = 0
+
+/// Cell Id of the Best accuracy in DesiredAccuracySection
+let kDesiredAccuracyBestAccuracyCell = 1
+
+/// Cell Id of the Nearest ten meters in DesiredAccuracySection
+let kDesiredAccuracyNearestTenMetersCell = 2
+
+/// Cell Id of the Nearest hundred meters in DesiredAccuracySection
+let kDesiredAccuracyNearestHundredMetersCell = 3
+
+/// Cell Id of the Nearest kilometer in DesiredAccuracySection
+let kDesiredAccuracyNearestKilometerCell = 4
 
 ///
 /// There are two preferences available:
@@ -44,6 +63,8 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
     /// Global Preferences
     var preferences : Preferences = Preferences.shared
     
+    var previousSelectedDesiredAccuracyCell : Int = 0
+
     /// Does the following:
     /// 1. Defines the areas for navBar and the Table view
     /// 2. Sets the title
@@ -80,10 +101,10 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
     
     // MARK: - Table view data source
     
-    /// Returns 3 sections: Units, Cache, Map Source
+    /// Returns 3 sections: Units, Cache, Map Source, Desired Accuracy
     override func numberOfSections(in tableView: UITableView?) -> Int {
         // Return the number of sections.
-        return 3
+        return 4
     }
     
     /// Returns the title of the existing sections.
@@ -94,6 +115,8 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
         case kUnitsSection: return "Units"
         case kCacheSection: return "Cache"
         case kMapSourceSection: return "Map source"
+        case kDesiredAccuracySection: return "Desired accuracy"
+
         default: fatalError("Unknown section")
         }
     }
@@ -105,6 +128,7 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
         case kCacheSection: return 2
         case kUnitsSection: return 1
         case kMapSourceSection: return GPXTileServer.count
+        case kDesiredAccuracySection : return 5
         default: fatalError("Unknown section")
         }
     }
@@ -163,6 +187,48 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
             
             return cell
         }
+        
+        if indexPath.section == kDesiredAccuracySection {
+            switch (indexPath.row) {
+            case kDesiredAccuracyBestForNavigationCell:
+                cell = UITableViewCell(style: .value1, reuseIdentifier: "DesiredAccuracyCell")
+                cell.textLabel?.text = "Best for navigation"
+                if preferences.desiredAccuracyDouble == kCLLocationAccuracyBestForNavigation {
+                    cell.accessoryType = .checkmark
+                    previousSelectedDesiredAccuracyCell = kDesiredAccuracyBestForNavigationCell
+                }
+            case kDesiredAccuracyBestAccuracyCell:
+                cell = UITableViewCell(style: .value1, reuseIdentifier: "DesiredAccuracyCell")
+                cell.textLabel?.text = "Best accuracy"
+                if preferences.desiredAccuracyDouble == kCLLocationAccuracyBest {
+                    cell.accessoryType = .checkmark
+                    previousSelectedDesiredAccuracyCell = kDesiredAccuracyBestAccuracyCell
+                }
+            case kDesiredAccuracyNearestTenMetersCell:
+                cell = UITableViewCell(style: .value1, reuseIdentifier: "DesiredAccuracyCell")
+                cell.textLabel?.text = "Nearest ten meters"
+                if preferences.desiredAccuracyDouble == kCLLocationAccuracyNearestTenMeters {
+                    cell.accessoryType = .checkmark
+                    previousSelectedDesiredAccuracyCell = kDesiredAccuracyNearestTenMetersCell
+                }
+            case kDesiredAccuracyNearestHundredMetersCell:
+                cell = UITableViewCell(style: .value1, reuseIdentifier: "DesiredAccuracyCell")
+                cell.textLabel?.text = "Nearest hundred meters"
+                if preferences.desiredAccuracyDouble == kCLLocationAccuracyHundredMeters {
+                    cell.accessoryType = .checkmark
+                    previousSelectedDesiredAccuracyCell = kDesiredAccuracyNearestHundredMetersCell
+                }
+            case kDesiredAccuracyNearestKilometerCell:
+                cell = UITableViewCell(style: .value1, reuseIdentifier: "DesiredAccuracyCell")
+                cell.textLabel?.text = "Kilometer accuracy"
+                if preferences.desiredAccuracyDouble == kCLLocationAccuracyKilometer {
+                    cell.accessoryType = .checkmark
+                    previousSelectedDesiredAccuracyCell = kDesiredAccuracyNearestKilometerCell
+                }
+            default: fatalError("Unknown section")
+            }
+        }
+        
         return cell
     }
     
@@ -237,6 +303,43 @@ class PreferencesTableViewController: UITableViewController, UINavigationBarDele
             
             //update map
             self.delegate?.didUpdateTileServer((indexPath as NSIndexPath).row)
+        }
+        
+        if indexPath.section == kDesiredAccuracySection {
+            print("PreferenccesTableView DesiredAccuracy section Row at index:  \(indexPath.row)")
+            
+            // remove checkmark from old selected desired accuracy
+            let selectedDesiredAccuracyIndexPath = IndexPath(row: previousSelectedDesiredAccuracyCell, section: indexPath.section)
+            tableView.cellForRow(at: selectedDesiredAccuracyIndexPath)?.accessoryType = .none
+            
+            //add checkmark to new desired accuracy
+            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
+            previousSelectedDesiredAccuracyCell = (indexPath as NSIndexPath).row
+            
+            var accuracy = kCLLocationAccuracyBest
+            
+            switch indexPath.row {
+            case kDesiredAccuracyBestForNavigationCell:
+                accuracy = kCLLocationAccuracyBestForNavigation
+                
+            case kDesiredAccuracyBestAccuracyCell:
+                accuracy = kCLLocationAccuracyBest
+                
+            case kDesiredAccuracyNearestTenMetersCell:
+                accuracy = kCLLocationAccuracyNearestTenMeters
+                
+            case kDesiredAccuracyNearestHundredMetersCell:
+                accuracy = kCLLocationAccuracyHundredMeters
+                
+            case kDesiredAccuracyNearestKilometerCell:
+                accuracy = kCLLocationAccuracyKilometer
+            
+            default:
+                fatalError("didSelectRowAt: Unknown cell")
+            }
+            preferences.desiredAccuracyDouble = accuracy
+            self.delegate?.didUpdateDesiredAccuracy(accuracy)
+
         }
         
         //unselect row

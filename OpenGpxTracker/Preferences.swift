@@ -9,6 +9,7 @@
 
 
 import Foundation
+import CoreLocation
 
 
 /// Key on Defaults for the Tile Server integer.
@@ -19,6 +20,9 @@ let kDefaultsKeyUseCache: String = "UseCache"
 
 /// Key on Defaults for the use of imperial units.
 let kDefaultsKeyUseImperial: String = "UseImperial"
+
+/// Key on Defaults for the desired accuracy.
+let kDefaultsKeyDesiredAccuracy: String = "DesiredAccuracy"
 
 
 /// A class to handle app preferences in one single place.
@@ -45,6 +49,9 @@ class Preferences: NSObject {
     
     /// In memory value of the preference.
     private var _tileServer: GPXTileServer = .apple
+    
+    /// In memory value of the desired accuracy.
+    private var _desiredAccuracy: Double = kCLLocationAccuracyBest;
     
     /// UserDefaults.standard shortcut
     private let defaults = UserDefaults.standard
@@ -75,6 +82,11 @@ class Preferences: NSObject {
             tileServerInt = tileServerInt >= GPXTileServer.count ? GPXTileServer.apple.rawValue : tileServerInt
             _tileServer = GPXTileServer(rawValue: tileServerInt)!
             print("** Preferences:: loaded preference from defaults tileServerInt \(tileServerInt)")
+        }
+        
+        if let desiredAccuracyDefaults = defaults.object(forKey: kDefaultsKeyDesiredAccuracy) as? Double {
+            _desiredAccuracy = desiredAccuracyDefaults
+            print("Preferences:: loaded preference from defaults desiredAccuracy= \(desiredAccuracyDefaults)");
         }
     }
     
@@ -122,6 +134,17 @@ class Preferences: NSObject {
         set {
             _tileServer = GPXTileServer(rawValue: newValue)!
              defaults.set(newValue, forKey: kDefaultsKeyTileServerInt)
+        }
+    }
+    
+    /// Get and sets user preference of the desired accuracy as Double.
+    var desiredAccuracyDouble: Double {
+        get {
+            return _desiredAccuracy
+        }
+        set {
+            _desiredAccuracy = newValue
+            defaults.set(newValue, forKey: kDefaultsKeyDesiredAccuracy)
         }
     }
 }

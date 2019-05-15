@@ -103,7 +103,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate  {
         let manager = CLLocationManager()
         manager.requestAlwaysAuthorization()
         
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.desiredAccuracy = Preferences.shared.desiredAccuracyDouble
         manager.distanceFilter = 2 //meters
         manager.headingFilter = 1 //degrees (1 is default)
         manager.pausesLocationUpdatesAutomatically = false
@@ -1020,6 +1020,10 @@ extension ViewController: StopWatchDelegate {
 // MARK: PreferencesTableViewControllerDelegate
 
 extension ViewController: PreferencesTableViewControllerDelegate {
+    func didUpdateDesiredAccuracy(_ newDesiredAccuracy: Double) {
+        locationManager.desiredAccuracy = newDesiredAccuracy
+    }
+    
     ///
     /// Updates the `tileServer` the map is using.
     ///
